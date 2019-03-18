@@ -29,6 +29,8 @@ start:
 		la a0, timer; csrw mtvec, a0
 
 		# set timer (10 ms)
+		la a0, MTIME; 	 sw zero, (a0)
+		la a0, MTIMECMP; sw zero, (a0)
 		TMR_SET TICK
 
 		# enable timer interrupt
