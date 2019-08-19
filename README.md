@@ -1,11 +1,16 @@
-# embench
-Micro-benchmark for embedded systems
+# Embench Context Switch and Interrupt Benchmark
 
-Hex Five's test cases for inclusion in David Patterson's emBench project https://github.com/embench
+Micro-benchmark for embedded systems to characterize their behavior in respect
+of context switching speed and interrupt latency.
+
+This work is led by Cesare Garlati (@cgarlati).
+
+Hex Five's test cases for eventualy inclusion in David Patterson's Embench
+project https://github.com/embench
 
 * ctx_switch
 
-   Measure the context switch performance of a typical embedded microkernel. 
+   Measure the context switch performance of a typical embedded microkernel.
 
 * irq_latency
 
@@ -14,14 +19,13 @@ Hex Five's test cases for inclusion in David Patterson's emBench project https:/
 * crypto
 
    Coming soon ...
-   
 
 Supported hardware
 
 * X300 - Hex Five RV32IMACU (Modified Freedom E300 Rocket)
 
    https://github.com/hex-five/multizone-fpga
-   
+
 * N25 - Andes Technology RV32IMAC
 
    Coming soon ...
@@ -29,6 +33,3 @@ Supported hardware
 * E31 - SiFive RV32IMACU
 
    Coming soon ...
-
-
-  
