@@ -1,14 +1,10 @@
 # RiscV interrupt latency benchmark
 ## BSP
 The following functions implementation shall be provided per BSP:
-- void bsp_init(void);
-BSP specific initialization function.
-- void bsp_enble_external_interrupt(void);
-Set and enable a specific external interrupt
-- void bsp_trigger_external_interrupt(void);
-Trigger the configured external interrupt
-- void bsp_clear_external_interrupt_indication(void);
-Clear the external interrupt indication - called from the interrupt handler
+- void bsp_init(void) -> BSP specific initialization function.
+- void bsp_enble_external_interrupt(void) -> Set and enable a specific external interrupt
+- void bsp_trigger_external_interrupt(void) -> Trigger the configured external interrupt
+- void bsp_clear_external_interrupt_indication(void) -> Clear the external interrupt indication - called from the interrupt handler
 
 ## Benchmark main function
 ```
