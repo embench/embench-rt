@@ -1,5 +1,33 @@
 # RiscV interrupt latency benchmark
 ## Interrupt Latency Measurement Concept
+### Assumption
+The provided core is connected to at least one source external interrupt that can be triggered by a running firmware.
+### Measurement
+Interrupt latency measurement is done by using the cycles counter (`mcycle` and `mcycleh`).
+Start measurement point: when all interrupts are disabled (`mstatus`) and the configured external interrupt already occurred.
+End measurement point depends on `mtvec` mode:
+- Trap mode: first 2 instructions read `mcycle` and `mcycleh` counters
+- Vector mode: first 2 instructions read `mcycle` and `mcycleh` counters
+
+Read `mcycle` and `mcycleh` counters is done to core registers `t5` and `t6` (it is assumed they are not used in the said flow)
+
+### Benchmark flow
+1. Measure the amount of cycles cost of overhead code (how much does it cost to measure): 
+    - Reading `mcycle` and `mcycleh` csrs 
+    - Setting a bit in `mstatus` csr
+2. Configure and enable a specific external interrupt - this external interrupt source is used to perform the latency measurements.
+3. Enable external interrupts in `mie`
+4. Execute the loop in step [6] when `mtvec` is set to trap mode
+5. Execute the loop in step [6] when `mtvec` is set to vector mode
+6. Loop x times:
+    - Disable interrupts (`mstatus`)
+    - Trigger the external interrupt
+    - Start measure point
+    - Enable interrupts (`mstatus`)
+    - At this point we have the amount of cycles cost for current interrupt so we reduce from it the overhead cycles mesured in step [1]
+    - Accumulated total cycles
+7. Calculate the average cycles count for trap mode
+8. Calculate the average cycles count for vector mode
 ## BSP
 The following functions implementation shall be provided per BSP:
 - void bsp_init(void) -> BSP specific initialization function.
