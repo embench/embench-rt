@@ -1,7 +1,7 @@
 # RiscV interrupt latency benchmark
 ## Interrupt Latency Measurement Concept
 ### Assumption
-The provided core is connected to at least one source external interrupt that can be triggered by a running firmware.
+The provided core is connected to at least one  external interrupt source that can be triggered by a running firmware.
 ### Measurement
 Interrupt latency measurement is done by using the cycles counter (`mcycle` and `mcycleh`).
 
