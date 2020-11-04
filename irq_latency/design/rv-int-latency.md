@@ -1,5 +1,5 @@
 # RiscV interrupt latency benchmark
-## Interrupt Latency Measurments Concept
+## Interrupt Latency Measurement Concept
 ## BSP
 The following functions implementation shall be provided per BSP:
 - void bsp_init(void) -> BSP specific initialization function.
