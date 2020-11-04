@@ -25,7 +25,7 @@ Read `mcycle` and `mcycleh` counters is done to core registers `t5` and `t6` (it
     - Start measure point
     - Enable interrupts (`mstatus`)
     - At this point we have the amount of cycles cost for current interrupt so we reduce from it the overhead cycles measured  in step [1]
-    - Accumulated total cycles
+    - Accumulate total cycles
 7. Calculate the average cycles count for trap mode
 8. Calculate the average cycles count for vector mode
 ## BSP
