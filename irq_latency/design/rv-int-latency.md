@@ -4,7 +4,9 @@
 The provided core is connected to at least one source external interrupt that can be triggered by a running firmware.
 ### Measurement
 Interrupt latency measurement is done by using the cycles counter (`mcycle` and `mcycleh`).
+
 Start measurement point: when all interrupts are disabled (`mstatus`) and the configured external interrupt already occurred.
+
 End measurement point depends on `mtvec` mode:
 - Trap mode: first 2 instructions read `mcycle` and `mcycleh` counters
 - Vector mode: first 2 instructions read `mcycle` and `mcycleh` counters
