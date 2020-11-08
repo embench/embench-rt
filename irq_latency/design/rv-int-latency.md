@@ -11,7 +11,7 @@ End measurement point depends on `mtvec` mode:
 - Trap mode: first 2 instructions read `mcycle` and `mcycleh` counters
 - Vector mode: first 2 instructions read `mcycle` and `mcycleh` counters
 
-Read `mcycle` and `mcycleh` counters is done to core registers `t5` and `t6` (it is assumed they are not used in the said flow)
+Read `mcycle` and `mcycleh` counters are done to core registers `t5` and `t6` (it is assumed they are not used in the said flow)
 
 ### Benchmark flow
 1. Measure the amount of cycles cost of overhead code (how much does it cost to measure): 
@@ -79,7 +79,7 @@ benchmark_body (int rpt)
       {
           loc_vec_cnt++;
           /* number of cycles in vector mode */
-          g_num_of_cycles_vect -= (g_num_of_cycles_start /* + cycles_overhead*/);
+          g_num_of_cycles_vect -= (g_num_of_cycles_start + cycles_overhead);
           /* total cycles in vector mode */
           vect_total += g_num_of_cycles_vect;
       }
@@ -102,7 +102,7 @@ benchmark_body (int rpt)
       {
           loc_trp_cnt++;
           /* number of cycles in trap mode */
-          g_num_of_cycles_trap -= (g_num_of_cycles_start /* + cycles_overhead*/);
+          g_num_of_cycles_trap -= (g_num_of_cycles_start + cycles_overhead);
           /* total cycles in trap mode */
           trap_total += g_num_of_cycles_trap;
       }
