@@ -1,9 +1,12 @@
-# Embench Context Switch and Interrupt Benchmark
+# Embench Real Time Benchmarks
 
 Micro-benchmark for embedded systems to characterize their behavior in respect
 of context switching speed and interrupt latency.
 
-This work is led by Cesare Garlati (@cgarlati).
+This repository was previously known as `embench-context-latency`.
+
+This work was initiated by Cesare Garlati (@cgarlati) and is now led by Ofer
+Shinaar (@oferShinaar) and Ronen Haen (@rhwd)
 
 Hex Five's test cases for eventualy inclusion in David Patterson's Embench
 project https://github.com/embench
