@@ -36,10 +36,26 @@ The following functions implementation shall be provided per BSP:
 - void bsp_enble_external_interrupt(void) -> Set and enable a specific external interrupt
 - void bsp_trigger_external_interrupt(void) -> Trigger the configured external interrupt
 - void bsp_clear_external_interrupt_indication(void) -> Clear the external interrupt indication - called from the interrupt handler
-- extern void bsp_enable_interrupts(void) -> system disable interrupts
-- extern void bsp_disable_interrupts(void) -> system enable interrupts
-- extern void bsp_trigger_external_interrupt_measure_cycles(volatile cycles_t* p_cycles) -> measure the cost in cycles of trigegrring the external interrupt   
-- extern void bsp_set_interrupts_handler(void *p_ints_handler, unsigned int is_vector) -> set interrupt vector/trap address
+- void bsp_enable_interrupts(void) -> system disable interrupts
+- void bsp_disable_interrupts(void) -> system enable interrupts
+- void bsp_trigger_external_interrupt_measure_cycles(volatile cycles_t* p_cycles) -> measure the cost in cycles of triggering the external interrupt   
+- void bsp_set_interrupts_handler(void *p_ints_handler, unsigned int is_vector) -> set interrupt vector/trap address
+
+Refer to /irq_latency/source/int-latency-bsp.h for more information
+
+### Adding new BSP
+
+Use /embench-rt/irq_latency/source/bsp-rv-template.c as a baseline for implementing a new BSP; copy and rename the template file /embench-rt/irq_latency/source/bsp-\<new-bsp-name\>.c and update /embench-rt/irq_latency/MAkefile accordingly (refer to comments in the Makefile). 
+
+Refer to the ```TODO:``` marks in bsp-rv-template.c where an implementation is required to support the new BSP.
+
+The implementation makes use of the following macros:
+- M_WRITE_CSR: write an entire CSR
+- M_CLEAR_CSR_BITS: set specific bits in a SCR
+- M_SET_CSR_BITS: clear specific bits in a SCR
+- M_READ_CYCLE_COUNTER_END: read the value of cpu cycles
+
+If adding a non riscv core support, an alternative implementation for /irq_latency/source/psp-int-rv.S is required.
 
 ## Benchmark main function
 ```
