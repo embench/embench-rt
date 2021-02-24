@@ -1,20 +1,14 @@
 
 #include "int-latency.h"
+#include "int-latency-bsp.h"
 
-extern void bsp_init(void);
-extern void psp_vect_table(void);
-extern void psp_trap_handler(void);
-extern void psp_vect_table_pure(void);
-extern void psp_trap_handler_pure(void);
+/* local prototypes */
+void psp_vect_table(void);
+void psp_trap_handler(void);
+void psp_vect_table_pure(void);
+void psp_trap_handler_pure(void);
 
-extern void bsp_enable_interrupts(void);
-extern void bsp_disable_interrupts(void);
-extern void bsp_enble_external_interrupt(void);
-extern void bsp_trigger_external_interrupt(void);
-extern void bsp_clear_external_interrupt_indication(void);
-extern void bsp_trigger_external_interrupt_measure_cycles(volatile cycles_t* p_cycles);
-extern void bsp_set_interrupts_handler(void *p_ints_handler, unsigned int is_vector);
-
+/* global variables */
 volatile unsigned int cycles_to_vect_entry = 0, cycles_to_trap_entry = 0;
 volatile unsigned int cycles_to_isr_vect_mode = 0, cycles_to_isr_trap_mode = 0;
 volatile cycles_t g_cycles_overhead;
@@ -28,8 +22,8 @@ __attribute__ ((interrupt))
 void
 interrupt_handler_from_vect(void)
 {
-  /* read mcycle and mcycleh */
-  M_READ_CYCLE_COUNTER_CSR(g_num_of_cycles_isr_entry);
+  /* read cpu cycle */
+  M_READ_CYCLE_COUNTER(g_num_of_cycles_isr_entry);
   /* count number of interrupts in vector mode */
   g_vect_count++;
   /* clear interrupt indication */
@@ -39,8 +33,8 @@ interrupt_handler_from_vect(void)
 void
 interrupt_handler_from_trap(void)
 {
-  /* read mcycle and mcycleh */
-  M_READ_CYCLE_COUNTER_CSR(g_num_of_cycles_isr_entry);
+  /* read cpu cycle */
+  M_READ_CYCLE_COUNTER(g_num_of_cycles_isr_entry);
   /* count number of interrupts in trap mode */
   g_trap_count++;
   /* clear interrupt indication */
@@ -61,8 +55,8 @@ measure_int_latency(int rpt, unsigned int* p_int_count, void* p_ints_handler,
      */
     for (loop_count = 0 ; loop_count < rpt ; loop_count++)
     {
-        /* read mcycle */
-        M_READ_CYCLE_COUNTER_CSR(g_num_of_cycles_start);
+        /* read cpu cycle */
+        M_READ_CYCLE_COUNTER(g_num_of_cycles_start);
         /* trigger a specific external interrupt */
         bsp_trigger_external_interrupt();
         /* number of cycles in trap mode */
@@ -85,10 +79,10 @@ measure_overhead_cycles_trigger_ext_int(int rpt)
     /* make the code worm - measure cycles penalty */
     for (loop_count = 0 ; loop_count < rpt ; loop_count++)
     {
-        /* read mcycle and mcycleh */
-        M_READ_CYCLE_COUNTER_CSR(g_num_of_cycles_start);
+        /* read cpu cycle */
+        M_READ_CYCLE_COUNTER(g_num_of_cycles_start);
         /* we want to measure number of cycles for triggering the interrupt */
-        bsp_trigger_external_interrupt_measure_cycles(&g_cycles_overhead);
+        bsp_trigger_external_interrupt_sample_cycles(&g_cycles_overhead);
         /* make sure measurement is OK */
         if (g_cycles_overhead <= g_num_of_cycles_start)
         {
@@ -161,12 +155,14 @@ benchmark_body (int rpt)
   cycles_to_vect_entry = measure_int_latency(rpt, &g_vect_count, (void*)psp_vect_table,
                                  1, &g_num_of_cycles);
 
+#ifdef D_CORE_HAS_TRAP
   /* initialize interrupt counter - how many interrupts occurred */
   g_trap_count = 0;
 
   /* measure number of cycles from interrupt to trap start */
   cycles_to_trap_entry = measure_int_latency(rpt, &g_trap_count, (void*)psp_trap_handler,
                                   0, &g_num_of_cycles);
+#endif /* D_CORE_HAS_TRAP */
 
   /*
    * measure from interrupt trigger to isr entry
@@ -179,12 +175,14 @@ benchmark_body (int rpt)
   cycles_to_isr_vect_mode = measure_int_latency(rpt, &g_vect_count, (void*)psp_vect_table_pure,
                                   1, &g_num_of_cycles_isr_entry);
 
+#ifdef D_CORE_HAS_TRAP
   /* initialize interrupt counter - how many interrupts occurred */
   g_trap_count = 0;
 
   /* measure number of cycles from interrupt to isr via trap */
   cycles_to_isr_trap_mode = measure_int_latency(rpt, &g_trap_count, (void*)psp_trap_handler_pure,
                                   0, &g_num_of_cycles_isr_entry);
+#endif /* D_CORE_HAS_TRAP */
 
   return 0;
 }

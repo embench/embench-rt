@@ -6,9 +6,15 @@ LINKER_SCRIPT := $(BSP_DIR)/link.lds
 all: $(TARGET)
 
 ASM_SRCS += $(BSP_DIR)/startup.S
-ASM_SRCS += source/psp-int-rv.S
-C_SRCS += source/bsp-rv-swerv-olof-eh1.c
 C_SRCS += source/int-latency.c
+
+ifeq ($(BOARD),EH1)
+   C_SRCS += source/bsp-rv-swerv-olof-eh1.c
+   ASM_SRCS += source/psp-int-rv.S
+   CDEFINES += -DD_CORE_HAS_TRAP -DD_RISCV
+else
+	$(error Unsupported board $(BOARD))
+endif
 
 INCLUDES =
 

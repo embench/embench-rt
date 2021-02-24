@@ -1,6 +1,6 @@
 /*
  * SPDX-License-Identifier: Apache-2.0
- * Copyright 2019 Western Digital Corporation or its affiliates.
+ * Copyright 2020-2021 Western Digital Corporation or its affiliates.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,14 +23,11 @@ OUTPUT_ARCH( "riscv" )
 
 ENTRY( _start )
 
-__comrv_overlay_storage_size = DEFINED(__comrv_overlay_storage_size) ? __comrv_overlay_storage_size : 0;
-
 MEMORY
 {
   ram  (wxa!ri) : ORIGIN = 0x00000000, LENGTH = 64M
   ram2 (wxa!ri) : ORIGIN = 0x04000000, LENGTH = 64M
   dccm (wxa!ri) : ORIGIN = 0xf0040000, LENGTH = 64K
-  ovl           : ORIGIN = 0xE0000000, LENGTH = __comrv_overlay_storage_size
 }
 
 PHDRS
@@ -38,7 +35,6 @@ PHDRS
   rom_load PT_LOAD;
   ram_init PT_LOAD;
   ram_load PT_LOAD;
-  ovl PT_NULL;
 }
 
 
@@ -49,8 +45,6 @@ PHDRS
 SECTIONS
 {
   __stack_size = DEFINED(__stack_size) ? __stack_size : 4K;
-  __comrv_cache_size = DEFINED(__comrv_cache_size) ? __comrv_cache_size : 0;
-  __comrv_cache_alignment_size = DEFINED(__comrv_cache_alignment_size) ? __comrv_cache_alignment_size : 0;
 
   .text.init :
   {
@@ -63,8 +57,6 @@ SECTIONS
     *(.text.unlikely .text.unlikely.*)
     *(.text.startup .text.startup.*)
     *(.text .text.*)
-    *(COMRV_TEXT_SEC)
-    *(COMRV_TEXT_ASM)
     *(.gnu.linkonce.t.*)
     . = ALIGN(4);
   } >ram : ram_load
@@ -75,20 +67,9 @@ SECTIONS
     *(.rdata)
     *(.rodata .rodata.*)
     *(.gnu.linkonce.r.*)
-    KEEP(*(COMRV_RODATA_SEC))
     . = ALIGN(4);
   } > ram : ram_load
 
-  /* this is a placeholder for comrv overlay groups.
-     after linking, we'll use objcopy utility and change the
-     address of .ovlgrpdata to this address */ 
-  .reserved_ovl : ALIGN(4)
-  {
-    _OVERLAY_STORAGE_START_ADDRESS_ = .;
-    . = LENGTH(ovl);
-  } > ram : ram_load
-
-  
   .lalign : 
   {
     . = ALIGN(4);
@@ -110,16 +91,6 @@ SECTIONS
     . = ALIGN(8); 
   } > ram : ram_load
 
-  COMRV_DATA_SEC : ALIGN(16)
-  {
-  
-  }  > ram2 : ram_load
-
-  PSP_DATA_SEC : ALIGN(16)
-  {
-  
-  }  > ram2 : ram_load
-
   .sdata :
   {
     . = ALIGN(8);
@@ -130,8 +101,6 @@ SECTIONS
     *(.srodata .srodata.*)
    . = ALIGN(8);
   } > ram : ram_load
-
-
   
   . = ALIGN(4);
   PROVIDE( _edata = . );
@@ -156,25 +125,4 @@ SECTIONS
     . = . + __stack_size;
     _sp = .;
   } > ram : ram_load
-  
-  
-  /* this area is used for loading and executing the comrv 
-     overlay groups */
-  .overlay_sec ALIGN(__comrv_cache_alignment_size) :
-  {
-    __OVERLAY_CACHE_START__ = . ;
-    . = . + __comrv_cache_size; 
-    __OVERLAY_CACHE_END__ = . ;
-  } > ram : ram_load
-
-  /* this is the location of all comrv overlay groups.
-     after linking, we'll use objcopy utility and copy
-     it to the .reserved_ovl section. we do this
-     to make sure there is no address dependency after linking */ 
-  .ovlgrps (OVERLAY) : 
-  {
-    OVERLAY_START_OF_OVERLAYS = .;
-    *(.ovlinput.*)
-    OVERLAY_END_OF_OVERLAYS = .;
-  } >ovl AT>ovl :ovl
 }
