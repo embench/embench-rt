@@ -31,6 +31,9 @@ else ifeq ($(BOARD),N25)
 else ifeq ($(BOARD),X300)
 	RISCV_ARCH := rv32imac
 	RISCV_ABI := ilp32
+else ifeq ($(BOARD),EH1)
+	RISCV_ARCH := rv32imc
+	RISCV_ABI := ilp32
 else
 	$(error Unsupported board $(BOARD))
 endif
@@ -48,16 +51,29 @@ export BSP_BASE
 export BSP_DIR
 
 #############################################################
+# Rules for building single benchmark
+#############################################################
+.PHONY: ctx_switch 
+ctx_switch: 
+	$(MAKE) -C ctx_switch
+
+.PHONY: irq_latency 
+irq_latency: 
+	$(MAKE) -C irq_latency
+
+#############################################################
 # Rules for building all benchmarks
 #############################################################
 
 .PHONY: all 
 all: 
 	$(MAKE) -C ctx_switch
+	$(MAKE) -C irq_latency
 
 .PHONY: clean
 clean: 
 	$(MAKE) -C ctx_switch clean
+	$(MAKE) -C irq_latency clean
 
 
 #############################################################
@@ -70,7 +86,7 @@ ifndef OPENOCD
 $(error OPENOCD not set)
 endif
 
-OPENOCD := $(abspath $(OPENOCD))/bin/openocd
+OPENOCD := $(abspath $(OPENOCD))/openocd
 
 OPENOCDCFG ?= bsp/$(BOARD)/openocd.cfg
 OPENOCDARGS += -f $(OPENOCDCFG)
@@ -93,22 +109,56 @@ load:
 	$(GDB) $(TEST)/$(TEST).hex $(GDB_LOAD_ARGS) $(GDB_LOAD_CMDS)
 
 #############################################################
-# Run benchmark
+# GDB args: ctx_switch benchmark
 #############################################################
 
-GDB_RUN_ARGS ?= --batch
-GDB_RUN_CMDS += -ex "target extended-remote localhost:$(GDB_PORT)"
-GDB_RUN_CMDS += -ex "shell clear"
-GDB_RUN_CMDS += -ex 'printf "> emBench - running ...\n" '
-GDB_RUN_CMDS += -ex "jump start"
-GDB_RUN_CMDS += -ex 'printf "> emBench - complete\n" '
-GDB_RUN_CMDS += -ex 'printf "> emBench - result : " '
-GDB_RUN_CMDS += -ex 'info registers $$mhpmcounter4'
-GDB_RUN_CMDS += -ex "monitor shutdown"
-GDB_RUN_CMDS += -ex "quit"
+GDB_RUN_ARGS_ctx_switch ?= --batch
+GDB_RUN_CMDS_ctx_switch += -ex "target extended-remote localhost:$(GDB_PORT)"
+GDB_RUN_CMDS_ctx_switch += -ex "shell clear"
+GDB_RUN_CMDS_ctx_switch += -ex 'printf "> emBench - running ...\n" '
+GDB_RUN_CMDS_ctx_switch += -ex "jump start"
+GDB_RUN_CMDS_ctx_switch += -ex 'printf "> emBench - complete\n" '
+GDB_RUN_CMDS_ctx_switch += -ex 'printf "> emBench - result : " '
+GDB_RUN_CMDS_ctx_switch += -ex 'info registers $$mhpmcounter4'
+GDB_RUN_CMDS_ctx_switch += -ex "monitor shutdown"
+GDB_RUN_CMDS_ctx_switch += -ex "quit"
+
+#############################################################
+# GDB args: irq_latency benchmark
+#############################################################
+
+GDB_RUN_ARGS_irq_latency ?= 
+GDB_RUN_CMDS_irq_latency += -ex "target remote localhost:$(GDB_PORT)"
+GDB_RUN_CMDS_irq_latency += -ex "set mem inaccessible-by-default off"
+GDB_RUN_CMDS_irq_latency += -ex "set remotetimeout 250"
+GDB_RUN_CMDS_irq_latency += -ex "set arch riscv:rv32"
+GDB_RUN_CMDS_irq_latency += -ex "load"
+# OpenOCD will execute Fence + Fence.i when resuming
+# the processor from the debug mode. This is needed for proper operation
+# of SW breakpoints with ICACHE
+GDB_RUN_CMDS_irq_latency += -ex "si"
+GDB_RUN_CMDS_irq_latency += -ex "c"
+GDB_RUN_CMDS_irq_latency += -ex 'printf "\n" '
+GDB_RUN_CMDS_irq_latency += -ex 'printf "\n" '
+GDB_RUN_CMDS_irq_latency += -ex 'printf "> irq_latency: cycles from interrupt -> vect entry ...\n" '
+GDB_RUN_CMDS_irq_latency += -ex "p cycles_to_vect_entry"
+GDB_RUN_CMDS_irq_latency += -ex 'printf "> irq_latency: cycles from interrupt -> trap entry ...\n" '
+GDB_RUN_CMDS_irq_latency += -ex "p cycles_to_trap_entry"
+GDB_RUN_CMDS_irq_latency += -ex 'printf "> irq_latency: cycles from interrupt -> isr entry (vector mode) ...\n" '
+GDB_RUN_CMDS_irq_latency += -ex "p cycles_to_isr_vect_mode"
+GDB_RUN_CMDS_irq_latency += -ex 'printf "> irq_latency: cycles from interrupt -> isr entry (trap mode)  ...\n" '
+GDB_RUN_CMDS_irq_latency += -ex "p cycles_to_isr_trap_mode"
+GDB_RUN_CMDS_irq_latency += -ex 'printf "> irq_latency: Done ...\n" '
+GDB_RUN_CMDS_irq_latency += -ex "monitor shutdown"
+GDB_RUN_CMDS_irq_latency += -ex "quit"
+
+#############################################################
+# Run benchmark
+#############################################################
+#	$(OPENOCD) $(OPENOCDARGS) 2>/dev/null & \
 
 .PHONY: run
 run:
-	$(OPENOCD) $(OPENOCDARGS) 2>/dev/null & \
-	$(GDB) $(TEST)/$(TEST).elf $(GDB_RUN_ARGS) $(GDB_RUN_CMDS)
+	$(OPENOCD) $(OPENOCDARGS) & \
+	$(GDB) $(TEST)/$(TEST).elf $(GDB_RUN_ARGS_$(TEST)) $(GDB_RUN_CMDS_$(TEST))
 	
