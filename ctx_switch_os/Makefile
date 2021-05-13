@@ -29,8 +29,7 @@ ASM_OBJS := $(ASM_SRCS:.S=.o)
 C_OBJS := $(C_SRCS:.c=.o)
 
 # D_CYCLES - measure cpu cycles; if not defined, use instructions counter
-# D_64_BIT_CYCLES - 64 bits core registers; if not defined, use 32 bits core registers
-CDEFINES += -DD_CYCLES -DD_64_BIT_CYCLES
+CDEFINES += -DD_CYCLES
 
 CFLAGS += -march=$(RISCV_ARCH) -mabi=$(RISCV_ABI) -mcmodel=medlow -Os -g3 -ffunction-sections -fdata-sections -Wall
 

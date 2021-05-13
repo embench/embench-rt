@@ -72,13 +72,15 @@
 .global invoke_first_task
 .global return_to_main
 .global g_p_current_task
+.global main_stack
 
 /*
 This function restores the main stack and resumes executing
 */
 return_to_main:
   /* restore 'main' sp */
-  mv sp, tp
+  la t0, main_stack
+  lw sp, 0(t0)
   /* restore 'main' state */
   M_PSP_POP
   /* resume 'main' execution */
@@ -92,17 +94,21 @@ invoke_first_task:
   /* save the 'main' state */
   M_PSP_PUSH
   /* save the 'main' sp */
-  mv tp, sp
-  /* update current task */
-  la t0, g_p_current_task
-  sw a0, 0(t0)
+  la t0, main_stack
+  sw sp, 0(t0)
+  /* prepare argument for select_next_task - currently no task */
+  mv  a0, zero
+  j context_switch_first_task
+  /* update current task - first field of g_p_current_task holds the task stack */
+  /*la t0, g_p_current_task
+  sw a0, 0(t0)*/
   /* update sp with the new task stack address */
-  lw t0, 0(a0)
-  mv sp, t0
+  /*lw t0, 0(a0)
+  mv sp, t0*/
   /* restore task registers */
-  M_PSP_POP
+  /*M_PSP_POP*/
   /* resume execution - start first task */
-  ret
+  /*ret*/
 
 /*
 Change running task by switching stack address
@@ -112,6 +118,7 @@ context_switch:
   M_PSP_PUSH
   /* prepare argument for select_next_task - current sp address */
   mv  a0, sp
+context_switch_first_task:
   /* select the next task to execute */
   jal select_next_task
   /* we got now a new stack address - update the sp value */
