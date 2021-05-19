@@ -61,6 +61,10 @@ ctx_switch:
 irq_latency: 
 	$(MAKE) -C irq_latency
 
+.PHONY: ctx_switch_os
+ctx_switch_os: 
+	$(MAKE) -C ctx_switch_os
+
 #############################################################
 # Rules for building all benchmarks
 #############################################################
@@ -69,11 +73,13 @@ irq_latency:
 all: 
 	$(MAKE) -C ctx_switch
 	$(MAKE) -C irq_latency
+	$(MAKE) -C ctx_switch_os
 
 .PHONY: clean
 clean: 
 	$(MAKE) -C ctx_switch clean
 	$(MAKE) -C irq_latency clean
+	$(MAKE) -C ctx_switch_os clean
 
 
 #############################################################
@@ -122,6 +128,35 @@ GDB_RUN_CMDS_ctx_switch += -ex 'printf "> emBench - result : " '
 GDB_RUN_CMDS_ctx_switch += -ex 'info registers $$mhpmcounter4'
 GDB_RUN_CMDS_ctx_switch += -ex "monitor shutdown"
 GDB_RUN_CMDS_ctx_switch += -ex "quit"
+
+#############################################################
+# GDB args: ctx_switch_os benchmark
+#############################################################
+
+GDB_RUN_ARGS_ctx_switch_os ?= 
+GDB_RUN_CMDS_ctx_switch_os += -ex "target remote localhost:$(GDB_PORT)"
+GDB_RUN_CMDS_ctx_switch_os += -ex "set mem inaccessible-by-default off"
+GDB_RUN_CMDS_ctx_switch_os += -ex "set remotetimeout 250"
+GDB_RUN_CMDS_ctx_switch_os += -ex "set arch riscv:rv32"
+GDB_RUN_CMDS_ctx_switch_os += -ex "load"
+# OpenOCD will execute Fence + Fence.i when resuming
+# the processor from the debug mode. This is needed for proper operation
+# of SW breakpoints with ICACHE
+GDB_RUN_CMDS_ctx_switch_os += -ex "si"
+GDB_RUN_CMDS_ctx_switch_os += -ex "c"
+GDB_RUN_CMDS_ctx_switch_os += -ex 'printf "\n" '
+GDB_RUN_CMDS_ctx_switch_os += -ex 'printf "\n" '
+GDB_RUN_CMDS_ctx_switch_os += -ex 'printf "> ctx_switch_os: event_set cycles ...\n" '
+GDB_RUN_CMDS_ctx_switch_os += -ex "p g_num_of_cycles_event_set_end"
+GDB_RUN_CMDS_ctx_switch_os += -ex 'printf "> ctx_switch_os: semaphore_give cycles  ...\n" '
+GDB_RUN_CMDS_ctx_switch_os += -ex "p g_num_of_cycles_semaphore_give_end"
+GDB_RUN_CMDS_ctx_switch_os += -ex 'printf "> ctx_switch_os: queue_send cycles ...\n" '
+GDB_RUN_CMDS_ctx_switch_os += -ex "p g_num_of_cycles_queue_send_end"
+GDB_RUN_CMDS_ctx_switch_os += -ex 'printf "> ctx_switch_os: yield cycles ...\n" '
+GDB_RUN_CMDS_ctx_switch_os += -ex "p g_num_of_cycles_task_yield_end"
+GDB_RUN_CMDS_ctx_switch_os += -ex 'printf "> ctx_switch_os: Done ...\n" '
+GDB_RUN_CMDS_ctx_switch_os += -ex "monitor shutdown"
+GDB_RUN_CMDS_ctx_switch_os += -ex "quit"
 
 #############################################################
 # GDB args: irq_latency benchmark
