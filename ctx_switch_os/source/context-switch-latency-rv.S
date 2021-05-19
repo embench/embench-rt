@@ -99,16 +99,6 @@ invoke_first_task:
   /* prepare argument for select_next_task - currently no task */
   mv  a0, zero
   j context_switch_first_task
-  /* update current task - first field of g_p_current_task holds the task stack */
-  /*la t0, g_p_current_task
-  sw a0, 0(t0)*/
-  /* update sp with the new task stack address */
-  /*lw t0, 0(a0)
-  mv sp, t0*/
-  /* restore task registers */
-  /*M_PSP_POP*/
-  /* resume execution - start first task */
-  /*ret*/
 
 /*
 Change running task by switching stack address
