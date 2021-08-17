@@ -6,7 +6,7 @@ of context switching speed and interrupt latency.
 This repository was previously known as `embench-context-latency`.
 
 This work was initiated by Cesare Garlati (@cgarlati) and is now led by Ofer
-Shinaar (@oferShinaar) and Ronen Haen (@rhwd)
+Shinaar (@oferShinaar) and Nati Rapaport (@nati-rapaport)
 
 Hex Five's test cases for eventualy inclusion in David Patterson's Embench
 project https://github.com/embench
